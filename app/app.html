@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Personal Colour Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#0d0d0f;
+    --surface:#151518;
+    --border:#2a2a30;
+    --text:#e8e6df;
+    --muted:#8a8880;
+    --accent:#c9a96e;
+    --accent2:#8fbcbb;
+    --spring:#ffcba4;
+    --summer:#b0c4de;
+    --autumn:#c47c3b;
+    --winter:#7b9fb8;
+    --r:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'DM Sans',sans-serif;
+    font-weight:300;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  /* ── Grain overlay ── */
+  body::before{
+    content:'';position:fixed;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none;z-index:0;opacity:.5;
+  }
+
+  /* ── Layout ── */
+  .wrap{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+  /* ── Header ── */
+  header{
+    padding:64px 0 48px;
+    display:flex;flex-direction:column;align-items:center;text-align:center;
+  }
+  .logo-ring{
+    width:72px;height:72px;border-radius:50%;
+    border:1.5px solid var(--accent);
+    display:grid;place-items:center;margin-bottom:28px;
+    background:radial-gradient(circle at 40% 40%,#1e1c17,var(--bg));
+  }
+  .logo-ring svg{width:32px;height:32px;stroke:var(--accent);fill:none;stroke-width:1.5}
+  h1{
+    font-family:'Cormorant Garamond',serif;
+    font-size:clamp(2.2rem,5vw,3.6rem);
+    font-weight:300;letter-spacing:.02em;line-height:1.1;
+  }
+  h1 em{font-style:italic;color:var(--accent)}
+  .tagline{
+    margin-top:14px;color:var(--muted);font-size:.95rem;
+    letter-spacing:.08em;text-transform:uppercase;
+  }
+
+  /* ── Upload zone ── */
+  .upload-zone{
+    margin:0 auto 32px;
+    max-width:560px;
+    border:1.5px dashed var(--border);
+    border-radius:var(--r);
+    padding:52px 32px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .25s,background .25s;
+    position:relative;
+  }
+  .upload-zone:hover,.upload-zone.drag-over{
+    border-color:var(--accent);
+    background:rgba(201,169,110,.04);
+  }
+  .upload-zone input{
+    position:absolute;inset:0;opacity:0;cursor:pointer;
+  }
+  .upload-icon{font-size:2.6rem;margin-bottom:14px;display:block}
+  .upload-hint{color:var(--muted);font-size:.9rem;margin-top:6px}
+  .upload-hint strong{color:var(--accent);font-weight:400}
+
+  /* ── Preview strip ── */
+  #preview-container{
+    display:none;
+    margin:0 auto 28px;
+    max-width:560px;
+    border-radius:var(--r);
+    overflow:hidden;
+    position:relative;
+  }
+  #preview-container img{
+    width:100%;max-height:340px;object-fit:cover;display:block;
+  }
+  .preview-remove{
+    position:absolute;top:12px;right:12px;
+    background:rgba(0,0,0,.7);border:1px solid var(--border);
+    color:var(--text);border-radius:50%;width:32px;height:32px;
+    display:grid;place-items:center;cursor:pointer;font-size:1.1rem;
+    transition:background .2s;
+  }
+  .preview-remove:hover{background:rgba(200,50,50,.7)}
+
+  /* ── Analyse button ── */
+  .btn-analyse{
+    display:block;margin:0 auto 48px;
+    background:var(--accent);color:#0d0d0f;
+    border:none;border-radius:40px;
+    padding:16px 52px;
+    font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:500;
+    letter-spacing:.06em;text-transform:uppercase;
+    cursor:pointer;transition:opacity .2s,transform .2s;
+  }
+  .btn-analyse:hover{opacity:.88;transform:translateY(-2px)}
+  .btn-analyse:disabled{opacity:.4;cursor:default;transform:none}
+
+  /* ── Spinner ── */
+  .spinner{
+    display:none;
+    margin:32px auto;
+    width:40px;height:40px;
+    border:2.5px solid var(--border);
+    border-top-color:var(--accent);
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ── Results card ── */
+  #results{display:none}
+
+  .season-card{
+    border-radius:var(--r);
+    overflow:hidden;
+    margin-bottom:32px;
+    border:1px solid var(--border);
+    background:var(--surface);
+  }
+  .season-hero{
+    padding:40px 36px;
+    display:flex;align-items:center;gap:24px;
+  }
+  .season-emoji{font-size:3.4rem;line-height:1}
+  .season-info h2{
+    font-family:'Cormorant Garamond',serif;
+    font-size:2.2rem;font-weight:300;
+  }
+  .season-info p{color:var(--muted);margin-top:8px;font-size:.95rem;line-height:1.6}
+
+  .season-spring .season-hero{background:linear-gradient(135deg,rgba(255,203,164,.12),transparent)}
+  .season-summer .season-hero{background:linear-gradient(135deg,rgba(176,196,222,.12),transparent)}
+  .season-autumn .season-hero{background:linear-gradient(135deg,rgba(196,124,59,.12),transparent)}
+  .season-winter .season-hero{background:linear-gradient(135deg,rgba(123,159,184,.12),transparent)}
+
+  /* ── Grid of detail panels ── */
+  .detail-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1px;
+    background:var(--border);
+  }
+  @media(max-width:600px){.detail-grid{grid-template-columns:1fr}}
+
+  .detail-panel{
+    background:var(--surface);
+    padding:28px 32px;
+  }
+  .detail-panel h3{
+    font-family:'Cormorant Garamond',serif;
+    font-size:1.1rem;font-weight:300;
+    letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:18px;
+  }
+
+  /* ── Colour swatches ── */
+  .swatch-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+  .swatch{
+    width:40px;height:40px;border-radius:8px;
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+    cursor:pointer;position:relative;
+    transition:transform .15s;
+  }
+  .swatch:hover{transform:scale(1.12)}
+  .swatch-label{font-size:.75rem;color:var(--muted);margin-top:2px;text-align:center;width:40px}
+
+  .region-swatch{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .region-dot{width:28px;height:28px;border-radius:6px;flex-shrink:0}
+  .region-info{font-size:.88rem}
+  .region-name{color:var(--muted);text-transform:capitalize;font-size:.78rem;letter-spacing:.06em}
+
+  /* ── Munsell bars ── */
+  .munsell-row{margin-bottom:14px}
+  .munsell-label{
+    display:flex;justify-content:space-between;
+    font-size:.82rem;color:var(--muted);margin-bottom:6px;
+  }
+  .bar-track{
+    height:6px;border-radius:3px;
+    background:var(--border);overflow:hidden;
+  }
+  .bar-fill{
+    height:100%;border-radius:3px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    transition:width .8s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── Annotated preview ── */
+  #annotated-preview{
+    border-radius:var(--r);overflow:hidden;
+    border:1px solid var(--border);
+    margin-bottom:32px;
+  }
+  #annotated-preview img{width:100%;display:block}
+
+  /* ── Avoid palette ── */
+  .avoid-strip{
+    display:flex;gap:8px;flex-wrap:wrap;
+    filter:grayscale(.4);opacity:.6;
+  }
+  .avoid-swatch{
+    width:32px;height:32px;border-radius:6px;
+    position:relative;
+  }
+  .avoid-swatch::after{
+    content:'';position:absolute;inset:0;
+    border-radius:6px;
+    background:repeating-linear-gradient(
+      -45deg,transparent,transparent 4px,
+      rgba(0,0,0,.45) 4px,rgba(0,0,0,.45) 5px
+    );
+  }
+
+  /* ── Footer ── */
+  footer{
+    border-top:1px solid var(--border);
+    margin-top:80px;padding:28px 0;
+    text-align:center;color:var(--muted);font-size:.82rem;
+  }
+  footer span{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo-ring">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+    </div>
+    <h1>Personal <em>Colour</em> Analysis</h1>
+    <p class="tagline">AI-powered skin tone &amp; season classification</p>
+  </header>
+
+  <!-- Upload -->
+  <div class="upload-zone" id="drop-zone">
+    <input type="file" id="file-input" accept="image/*"/>
+    <span class="upload-icon">📷</span>
+    <p>Drop your portrait here or <strong>browse</strong></p>
+    <p class="upload-hint">Supports JPG, PNG · Best with clear front-facing photo</p>
+  </div>
+
+  <!-- Preview -->
+  <div id="preview-container">
+    <img id="preview-img" src="" alt="Preview"/>
+    <button class="preview-remove" id="remove-btn" title="Remove">✕</button>
+  </div>
+
+  <!-- Analyse -->
+  <button class="btn-analyse" id="analyse-btn" disabled>Analyse Season</button>
+
+  <!-- Spinner -->
+  <div class="spinner" id="spinner"></div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <div class="season-card" id="season-card">
+      <div class="season-hero">
+        <div class="season-emoji" id="r-emoji"></div>
+        <div class="season-info">
+          <h2 id="r-season"></h2>
+          <p id="r-desc"></p>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+
+        <!-- Dominant colours -->
+        <div class="detail-panel">
+          <h3>Skin · Hair · Eye Tones</h3>
+          <div id="r-regions"></div>
+        </div>
+
+        <!-- Munsell -->
+        <div class="detail-panel">
+          <h3>Munsell Parameters</h3>
+          <div id="r-munsell"></div>
+        </div>
+
+        <!-- Recommended palette -->
+        <div class="detail-panel">
+          <h3>Your Palette</h3>
+          <div class="swatch-row" id="r-palette"></div>
+        </div>
+
+        <!-- Avoid -->
+        <div class="detail-panel">
+          <h3>Colours to Avoid</h3>
+          <div class="avoid-strip" id="r-avoid"></div>
+        </div>
+
+        <!-- Undertone + Contrast -->
+        <div class="detail-panel">
+          <h3>Undertone &amp; Contrast</h3>
+          <div id="r-undertone"></div>
+        </div>
+
+        <!-- Harmony tip -->
+        <div class="detail-panel">
+          <h3>Styling Tip</h3>
+          <p id="r-tip" style="color:var(--muted);font-size:.9rem;line-height:1.7"></p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Annotated preview from server -->
+    <div id="annotated-preview"><img id="r-preview" src="" alt="Annotated"/></div>
+
+  </div><!-- /results -->
+
+  <footer>Built with <span>ClipUNet + DeepLabV3</span> · LaPa Dataset · Munsell Colour System</footer>
+</div><!-- /wrap -->
+
+<script>
+const API = '';   // same origin; change to 'http://localhost:5000' if needed
+
+const dropZone   = document.getElementById('drop-zone');
+const fileInput  = document.getElementById('file-input');
+const previewCon = document.getElementById('preview-container');
+const previewImg = document.getElementById('preview-img');
+const removeBtn  = document.getElementById('remove-btn');
+const analyseBtn = document.getElementById('analyse-btn');
+const spinner    = document.getElementById('spinner');
+const results    = document.getElementById('results');
+const seasonCard = document.getElementById('season-card');
+
+let selectedFile = null;
+
+// ── Drag & drop ──
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', ()=> dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) setFile(f);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) setFile(fileInput.files[0]);
+});
+
+function setFile(f){
+  selectedFile = f;
+  const url = URL.createObjectURL(f);
+  previewImg.src = url;
+  previewCon.style.display = 'block';
+  dropZone.style.display   = 'none';
+  analyseBtn.disabled = false;
+  results.style.display = 'none';
+}
+
+removeBtn.addEventListener('click', () => {
+  selectedFile = null;
+  previewCon.style.display = 'none';
+  dropZone.style.display   = 'block';
+  analyseBtn.disabled = true;
+  results.style.display = 'none';
+  fileInput.value = '';
+});
+
+// ── Analyse ──
+analyseBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+  analyseBtn.disabled = true;
+  spinner.style.display = 'block';
+  results.style.display = 'none';
+
+  const form = new FormData();
+  form.append('image', selectedFile);
+
+  try {
+    const res  = await fetch(`${API}/analyze`, { method:'POST', body:form });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    renderResults(data);
+  } catch(e) {
+    alert('Analysis failed: ' + e.message);
+  } finally {
+    spinner.style.display = 'none';
+    analyseBtn.disabled = false;
+  }
+});
+
+// ── Render ──
+function renderResults(d){
+  document.getElementById('r-emoji').textContent  = d.emoji;
+  document.getElementById('r-season').textContent = d.season;
+  document.getElementById('r-desc').textContent   = d.description;
+
+  seasonCard.className = 'season-card season-' + d.season.toLowerCase();
+
+  // Regions
+  const regionsEl = document.getElementById('r-regions');
+  regionsEl.innerHTML = '';
+  const regionLabels = {skin:'Skin',hair:'Hair',left_eye:'Left Eye',right_eye:'Right Eye',nose:'Nose'};
+  for (const [name, hex] of Object.entries(d.dominant_colors)){
+    regionsEl.innerHTML += `
+      <div class="region-swatch">
+        <div class="region-dot" style="background:${hex}"></div>
+        <div class="region-info">
+          <div class="region-name">${regionLabels[name]||name}</div>
+          <div>${hex}</div>
+        </div>
+      </div>`;
+  }
+
+  // Munsell
+  const m = d.munsell;
+  const munsellEl = document.getElementById('r-munsell');
+  munsellEl.innerHTML = '';
+  const bars = [
+    {label:'Hue (Warm→Cool)', val:m.hue/360, raw:m.hue.toFixed(1)+'°'},
+    {label:'Value (Lightness)', val:m.value/10, raw:m.value.toFixed(1)+'/10'},
+    {label:'Chroma (Saturation)', val:Math.min(m.chroma/20,1), raw:m.chroma.toFixed(1)},
+  ];
+  bars.forEach(b => {
+    munsellEl.innerHTML += `
+      <div class="munsell-row">
+        <div class="munsell-label"><span>${b.label}</span><span>${b.raw}</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(b.val*100).toFixed(1)}%"></div></div>
+      </div>`;
+  });
+
+  // Palette
+  const palEl = document.getElementById('r-palette');
+  palEl.innerHTML = '';
+  (d.palette||[]).forEach(hex => {
+    palEl.innerHTML += `<div>
+      <div class="swatch" style="background:${hex}" title="${hex}"></div>
+      <div class="swatch-label">${hex}</div>
+    </div>`;
+  });
+
+  // Avoid
+  const avEl = document.getElementById('r-avoid');
+  avEl.innerHTML = '';
+  (d.avoid||[]).forEach(hex => {
+    avEl.innerHTML += `<div class="avoid-swatch" style="background:${hex}" title="${hex}"></div>`;
+  });
+
+  // Annotated preview
+  if (d.preview_b64){
+    document.getElementById('r-preview').src = 'data:image/jpeg;base64,' + d.preview_b64;
+    document.getElementById('annotated-preview').style.display = 'block';
+  } else {
+    document.getElementById('annotated-preview').style.display = 'none';
+  }
+
+  // Undertone + contrast
+  const utEl = document.getElementById('r-undertone');
+  const ut   = d.undertone || 'neutral';
+  const utColor = {warm:'#c9a96e', cool:'#8fbcbb', neutral:'#a0a0a0'}[ut] || '#888';
+  const ct   = d.contrast || {};
+  utEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="background:${utColor};width:14px;height:14px;border-radius:50%;display:inline-block"></span>
+      <span style="text-transform:capitalize;font-size:.95rem">${ut} undertone</span>
+    </div>
+    ${ct.score !== undefined ? `
+    <div class="munsell-row">
+      <div class="munsell-label"><span>Skin–Hair Contrast</span><span>${ct.score}/100 · ${ct.level||''}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${ct.score||0}%"></div></div>
+    </div>` : ''}`;
+
+  // Styling tip
+  const tip = (d.harmony && d.harmony.tip) || '';
+  document.getElementById('r-tip').textContent = tip || 'Wear colours that complement your natural tone.';
+
+  results.style.display = 'block';
+  results.scrollIntoView({behavior:'smooth', block:'start'});
+}
+</script>
+</body>
+</html>
