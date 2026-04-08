@@ -1,3 +1,5 @@
+# File src/models/system_1_deeplabv3.py
+
 """
 src/models/system_1_deeplabv3.py
 DeepLabV3 with ResNet-50 backbone + custom 11-class head for LaPa face parsing.
@@ -148,10 +150,13 @@ class DeepLabV3(nn.Module):
     def _make_atrous(layer: nn.Module, stride: int, dilation: int):
         """Replace strides with atrous (dilated) convolutions."""
         for m in layer.modules():
-            if isinstance(m, nn.Conv2d) and m.stride == (2, 2):
-                m.stride  = (stride, stride)
-                m.dilation = (dilation, dilation)
-                m.padding  = (dilation, dilation)
+            if isinstance(m, nn.Conv2d):
+                if m.stride == (2, 2):
+                    m.stride = (stride, stride)
+                # Chỉ áp dụng dilation cho conv 3×3, KHÔNG phải 1×1
+                if m.kernel_size == (3, 3):
+                    m.dilation = (dilation, dilation)
+                    m.padding  = (dilation, dilation)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         h, w = x.shape[-2:]

@@ -46,11 +46,11 @@ def get_train_transforms(size=IMG_SIZE):
     return A.Compose([
         A.Resize(size[0], size[1]),
         A.HorizontalFlip(p=0.5),
-        A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.1,
-                           rotate_limit=15, border_mode=cv2.BORDER_REFLECT, p=0.5),
+        A.Affine(translate_percent=0.05, scale=(0.9, 1.1),
+        rotate=(-15, 15), mode=cv2.BORDER_REFLECT, p=0.5),
         A.ColorJitter(brightness=0.3, contrast=0.3,
                       saturation=0.2, hue=0.05, p=0.5),
-        A.GaussNoise(var_limit=(10, 50), p=0.2),
+        A.GaussNoise(std_range=(0.02, 0.1), p=0.2),
         A.Normalize(mean=MEAN, std=STD),
         ToTensorV2(),
     ])

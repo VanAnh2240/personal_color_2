@@ -1,3 +1,5 @@
+# File train.py
+
 """
 train.py  –  Training script for DeepLabV3 / ClipUNet on LaPa.
 

@@ -79,8 +79,7 @@ class ClipEncoder(nn.Module):
     def __init__(self, model_name: str = CLIP_MODEL_NAME,
                  freeze: bool = True):
         super().__init__()
-        clip_model, _ = clip.load(model_name, device="cpu",
-                                  jit=False)
+        clip_model, _ = clip.load(model_name, device="cpu", jit=False, torch_dtype=torch.float16)
         self.visual = clip_model.visual          # VisionTransformer
         self.visual = self.visual.float()        # ensure fp32
         if freeze:
