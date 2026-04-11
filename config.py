@@ -14,6 +14,7 @@ RAW_DIR    = os.path.join(DATA_DIR, "raw")
 PROC_DIR   = os.path.join(DATA_DIR, "processed")
 CKPT_DIR   = os.path.join(BASE_DIR, "checkpoints")
 RESULT_DIR = os.path.join(BASE_DIR, "results")
+RESULT_IMG = RESULT_DIR  # Alias for backward compatibility
 SRC_DIR    = os.path.join(BASE_DIR, "src")
 
 os.makedirs(RAW_DIR,    exist_ok=True)
@@ -24,30 +25,40 @@ os.makedirs(RESULT_DIR, exist_ok=True)
 # ─────────────────────────────────────────────
 # Dataset  (LaPa)
 # ─────────────────────────────────────────────
-LAPA_NUM_CLASSES = 11          # 0-background … 10-cloth
+LAPA_NUM_CLASSES = 11        
 LAPA_CLASS_NAMES = [
-    "background", "skin", "left_eyebrow", "right_eyebrow",
-    "left_eye",   "right_eye", "nose", "upper_lip",
-    "inner_mouth","lower_lip",  "hair"
+    "background",   # 0
+    "skin",         # 1
+    "left_eyebrow", # 2
+    "right_eyebrow",# 3
+    "left_eye",     # 4
+    "right_eye",    # 5
+    "nose",         # 6
+    "upper_lip",    # 7
+    "inner_mouth",  # 8
+    "lower_lip",    # 9
+    "hair",         # 10
 ]
+
 # Indices of regions used for pigment extraction
-# skin=1, left_eye=4, right_eye=5, nose=6, hair=10
 PIGMENT_REGIONS = {
-    "skin":  1,
-    "left_eye":  4,
-    "right_eye": 5,
-    "nose":  6,
-    "hair":  10,
+    "skin":      1,
+    "left_eye":  4,  
+    "right_eye": 5,   
+    "nose":      6,  
+    "hair":      10, 
+    "upper_lip": 7,   
+    "lower_lip": 9,  
 }
 
-IMG_SIZE   = (512, 512)   # H x W fed to the model
+IMG_SIZE   = (224, 224)  # H x W fed to the model
 MEAN       = [0.485, 0.456, 0.406]
 STD        = [0.229, 0.224, 0.225]
 
 # ─────────────────────────────────────────────
 # Training
 # ─────────────────────────────────────────────
-BATCH_SIZE    = 8
+BATCH_SIZE    = 16
 NUM_EPOCHS    = 50
 LR            = 1e-4
 WEIGHT_DECAY  = 1e-4
@@ -99,3 +110,9 @@ WARM_HUE_MAX = 90
 # ─────────────────────────────────────────────
 CKPT_DEEPLAB  = os.path.join(CKPT_DIR, "system_1_deeplabv3.pth")
 CKPT_CLIPUNET = os.path.join(CKPT_DIR, "system_2_clipunet.pth")
+
+
+# ─────────────────────────────────────────────
+# API APP
+# ─────────────────────────────────────────────
+RESULT_IMG   = os.path.join(BASE_DIR, "app_img")

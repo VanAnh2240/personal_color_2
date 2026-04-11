@@ -4,6 +4,7 @@ torchvision>=0.15.0
 
 # CLIP (OpenAI)
 git+https://github.com/openai/CLIP.git
+open_clip_torch>=2.0.0
 
 # Computer vision & image processing
 opencv-python>=4.7.0
@@ -15,14 +16,17 @@ Pillow>=9.0.0
 scikit-learn>=1.2.0
 numpy>=1.23.0
 
-# Web backend
-# flask>=2.3.0
-# flask-cors>=4.0.0
-
-# Colab / ngrok (optional — for Google Colab deployment)
-# pyngrok>=6.0.0
-
 # Utilities
 tqdm>=4.64.0
 pandas>=1.5.0
 matplotlib>=3.6.0
+
+# API
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9   
+opencv-python>=4.9.0
+numpy>=1.26.0
+torch>=2.2.0
+torchvision>=0.17.0
+pydantic>=2.6.0

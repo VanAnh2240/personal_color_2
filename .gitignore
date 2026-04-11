@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+checkpoints/
 *.py[cod]
 *$py.class
 
@@ -130,7 +131,6 @@ dmypy.json
 
 # Data and checkpoints (large files)
 data/
-checkpoints/
 results/
 
 # VS Code
